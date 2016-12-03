@@ -1,6 +1,6 @@
 # Advent of Code
-[Edition 2015](https://img.shields.io/badge/AoC 2015-2 gold-yellow.svg)
-[Edition 2016](https://img.shields.io/badge/AoC 2016-6 gold-yellow.svg)
+![Edition 2015](https://img.shields.io/badge/AoC 2015-2 gold-yellow.svg)
+![Edition 2016](https://img.shields.io/badge/AoC 2016-6 gold-yellow.svg)
 
 This is my attempt to solve each year [advent of code](http://adventofcode.com),
 for now, I'm using haskell, but that might change in the future.
