@@ -4,9 +4,10 @@ import Data.List
 import System.IO
 
 mostCommon :: String -> Char
-mostCommon = fst . head . sortBy sorted . ocurrences
+mostCommon = fst . last . sortBy sorted . ocurrences
     where
         sorted (_, val1) (_, val2) = compare val2 val1
+
 
 ocurrences :: String -> [(Char, Int)]
 ocurrences [] = []
