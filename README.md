@@ -1,5 +1,5 @@
 # Advent of Code
-![Edition 2015](https://img.shields.io/badge/AoC 2015-3 gold-yellow.svg)
+![Edition 2015](https://img.shields.io/badge/AoC 2015-4 gold-yellow.svg)
 ![Edition 2016](https://img.shields.io/badge/AoC 2016-12 gold-yellow.svg)
 
 This is my attempt to solve each year [advent of code](http://adventofcode.com),

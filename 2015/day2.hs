@@ -18,12 +18,24 @@ extra :: Present -> Int
 extra = minimum . map tupleProduct . combinations
     where
         tupleProduct (a,b) = a*b
-        combinations (w, l, h) = [(w,l), (l,h), (h,w)]
+
+combinations :: Present -> [(Int, Int)]
+combinations (w, l, h) = [(w,l), (l,h), (h,w)]
+
+wrapRibbon :: Present -> Int
+wrapRibbon = minimum . map perimeter . combinations
+    where
+        perimeter (a,b) = 2*a + 2*b
+
+bow :: Present -> Int
+bow (a,b,c) = a*b*c
 
 main = do
     contents <- readFile "input2.txt"
     let contents' = "2x3x4\n1x1x10"
         presents = map parseInput $ lines contents
         paper = zipWith (+) (map surface presents) (map extra presents)
+        ribbon = zipWith (+) (map wrapRibbon presents) (map bow presents)
 
     print $ foldl (+) 0 paper
+    print $ foldl (+) 0 ribbon
