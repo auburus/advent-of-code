@@ -14,6 +14,7 @@ isOpen :: Pos -> Bool
 isOpen (Pos x y) =
     let multiplied = x*x + 3*x + 2*x*y + y + y*y
         magicNumber = 1362
+        -- magicNumber = 10
 
     in
         (even . sum . toBinary) (multiplied + magicNumber)
@@ -33,32 +34,22 @@ nextMoves node =
                 ]
         next'' = filter (\(Pos x y) -> x >= 0 && y >= 0) next'
 
-bfs :: Pos -> [Node] -> Int
-bfs final queue
-    | final == pos current = moves current
-    | otherwise = bfs final queue'
-    
+bfs' :: [Pos] -> Int -> [Node] -> [Pos]
+bfs' visited maxMoves queue
+    | null queue = visited
+    | otherwise = bfs' visited' maxMoves queue'
+
     where
         current = head queue
-        queue' = (tail queue) ++ (nextMoves current)
+        visited' = visited ++ (map pos next)
+        queue' = (tail queue) ++ next
 
--- Same as above, but with memory
--- memory is a list... it should be a Map, but as long as it works...
-bfs' :: [Pos] -> Pos -> [Node] -> Int
-bfs' visited final queue
-    | final == pos current = moves current
-    | otherwise = bfs' visited' final queue'
-
-    -- Just noticed there was a bug, i was visiting some locations twice or more
-    -- It's corrected in the extra
-    where
-        current = head queue
-        visited' = (pos current) : visited
-        queue' = (tail queue) ++ (nextMoves' current)
+        next = nextMoves'' current
         nextMoves' = filter (\(Node p _ ) -> p `notElem` visited) . nextMoves
+        nextMoves'' = filter(\(Node _ m) -> m <= maxMoves) . nextMoves'
 
 main = do
-    let row = map (\x -> (x,0)) [0..9]
-        startNode = Node (Pos 1 1) 0
+    let startNode = Node (Pos 1 1) 0
     
-    print $ bfs' [] (Pos 31 39) [startNode]
+    -- print $ bfs' [] 5 [startNode]
+    print $ length $ bfs' [] 50 [startNode]
