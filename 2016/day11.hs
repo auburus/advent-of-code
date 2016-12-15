@@ -2,195 +2,168 @@ module Main where
 
 import Data.List
 
-data Item = Generator Char | Microchip Char deriving (Show, Eq)
+data Item' = Generator Char | Chip Char deriving (Show, Eq)
+data Item = Item { pos :: Int
+                 , item :: Item'
+                 } deriving (Show, Eq)
 
-data State = State { elevator :: Int
-                   , floor1 :: [Item]
-                   , floor2 :: [Item]
-                   , floor3 :: [Item]
-                   , floor4 :: [Item]
-                   } deriving (Show)
+data State = State { moves :: Int
+                   , elevator :: Int
+                   , items :: [Item]
+                   }
 
-getFloor :: State -> Int -> [Item]
-getFloor state i
-    | i == 1 = floor1 state
-    | i == 2 = floor2 state
-    | i == 3 = floor3 state
-    | i == 4 = floor4 state
-    | otherwise = error "Invalid floor"
+instance Show State where
+    show (State m elev items) =
+        "Moves: " ++ show m ++ "\n" ++
+        "Elevator: " ++ show elev ++ "\n" ++
+        show (inFloor 4 items) ++ "\n" ++
+        show (inFloor 3 items) ++ "\n" ++
+        show (inFloor 2 items) ++ "\n" ++
+        show (inFloor 1 items) ++ "\n"
 
-hasFloor :: Int -> Bool
-hasFloor i = i `elem` [1,2,3,4]
+sameList :: Eq a => [a] -> [a] -> Bool
+sameList [] [] = True
+sameList [] _ = False
+sameList _ [] = False
+sameList (x:xs) ys 
+    | x `notElem` ys = False
+    | otherwise = sameList xs (delete x ys)
 
-isChip :: Item -> Bool
-isChip (Microchip _) = True
+instance Eq State where
+    (==) (State m1 e1 items1) (State m2 e2 items2) =
+        e1 == e2 && sameList items1 items2
+
+inFloor :: Int -> [Item] -> [Item]
+inFloor i = filter (\x -> pos x == i)
+
+isChip :: Item' -> Bool
+isChip (Chip _) = True
 isChip _ = False
 
-isGenerator :: Item -> Bool
+isGenerator :: Item' -> Bool
 isGenerator = not . isChip
 
-allChips :: [Item] -> Bool
+allChips :: [Item'] -> Bool
 allChips [] = True
 allChips xs = (foldl (&&) True . map isChip) xs
 
-allGenerators :: [Item] -> Bool
+allGenerators :: [Item'] -> Bool
 allGenerators [] = True
 allGenerators xs = (foldl (&&) True . map isGenerator) xs
 
-splitItems :: [Item] -> ([Item], [Item])
+splitItems :: [Item'] -> ([Item'], [Item'])
 splitItems = partition isChip
 
-chipProtected :: [Item] -> Item -> Bool
-chipProtected generators (Microchip c) = c `elem` generators'
+chipProtected :: [Item'] -> Item' -> Bool
+chipProtected generators (Chip c) = c `elem` generators'
     where
         generators' = map (\(Generator g) -> g) generators
 
--- Magic function, that given a list of items, tells if they can be together or not
-validCombination :: [Item] -> Bool
-validCombination [] = True
-validCombination (x:[]) = True
-validCombination items
-    | allChips items = True
-    | allGenerators items = True
+validFloor :: [Item] -> Bool
+validFloor items
+    | allChips items' = True
+    | allGenerators items' = True
     | otherwise =
         (foldl (&&) True . map (chipProtected generators) ) chips
     where
-        (chips, generators) = splitItems items
+        items' = map item items
+        (chips, generators) = splitItems items'
 
+-- This function checks that an Item collection is a valid one
+isValid :: [Item] -> Bool
+isValid items = allItemsValid items &&
+    (foldl (&&) True
+    . map validFloor
+    . map (\i -> inFloor i items)) [1..4]
+    where
+        allItemsValid :: [Item] -> Bool
+        allItemsValid = foldl (&&) True
+                      . map (\(Item i _) -> i `elem` [1..4] )
+
+-- Until here, validation
+-- From now on, the next states
 fitInElevator :: [Item] -> Bool
 fitInElevator xs
     | length xs > 2 = False
     | null xs = False
-    | otherwise = validCombination xs
+    | otherwise = isValid xs
 
 nextStates :: State -> [State]
-nextStates state = [state]
-{-
-    | null currentFloorCombs = []
-    | otherwise =
-        (filter validCombination mergedNextFloor) ++
-        (filter validCombination mergedPrevFloor)
+nextStates state@(State i elev items) =
+    map (\(e,x) -> state { moves = i + 1
+                         , elevator = e
+                         , items = x }) (next elev items)
+
+next :: Int -> [Item] -> [(Int, [Item])]
+next current items = total'
     where
-        currentFloor = getFloor state (elevator state)
-        currentFloorCombs :: [[Item]]
-        currentFloorCombs = filter fitInElevator (subsequences currentFloor)
-        mergedNextFloor :: [[Item]]
-        mergedNextFloor = if hasFloor (elevator state + 1)
-                          then map ((++) (getFloor state (elevator state + 1))) currentFloorCombs
-                          else []
-        nextFloorStates = 
-        mergedPrevFloor :: [[Item]]
-        mergedPrevFloor = if hasFloor (elevator state - 1)
-                          then map ((++) (getFloor state (elevator state - 1))) currentFloorCombs
-                          else []
-                              -}
+        current' = inFloor current items
+        validCombs :: [[Item]]
+        validCombs = filter fitInElevator (subsequences current')
+        withoutComb = map (deleteList items) validCombs
+        toUpperFloor = map (map (\x -> x { pos = pos x + 1 } ) ) validCombs
+        toLowerFloor = map (map (\x -> x { pos = pos x - 1 } ) ) validCombs
+        upperTotal = (zipWith (++) withoutComb toUpperFloor)
+        lowerTotal = (zipWith (++) withoutComb toLowerFloor)
+        upper = map (\x -> (current + 1, x)) upperTotal
+        lower = map (\x -> (current - 1, x)) lowerTotal
+        total = upper ++ lower
+        total' = filter (isValid . snd) total
+        
+deleteList :: Eq a => [a] -> [a] -> [a]
+deleteList list [] = list
+deleteList list (x:xs) = deleteList (delete x list) xs
 
-move :: State -> Int -> Int -> [Item] -> State
-move state from to [] = state
-move state from to (item:items) = move newState'' from to items
-    where
-        newState'' = newState' {elevator = to}
-        newState' = updateFloor newState from fromFloor'
-        newState = updateFloor state to toFloor'
+-- Now, the bsf and the final state check
 
-        fromFloor = getFloor state from
-        fromFloor' = delete item fromFloor
-        toFloor = getFloor state to
-        toFloor' = item:toFloor
-
-updateFloor :: State -> Int -> [Item] -> State
-updateFloor state i floor
-    | i == 1 = state {floor1 = floor}
-    | i == 2 = state {floor2 = floor}
-    | i == 3 = state {floor3 = floor}
-    | i == 4 = state {floor4 = floor}
-    | otherwise = error "Invalid floor"
-
-nextStatePossibilities :: [State] -> [[State]]
-nextStatePossibilities states = [states]
-{-
-    | null next = []
-    | otherwise = map ((++) states) next
-    where
-        next = nextStates (last states)
--}
-
-isFinalState :: State -> Bool
-isFinalState state
-    | (elevator state) /= 4 = False
-    | (foldl (&&) True . map (not . null) . map (getFloor state)) [1,2,3] = False
+isFinal :: State -> Bool
+isFinal (State m elev items)
+    | elev /= 4 = False
+    | (null . inFloor 4 ) items = False
+    | (not . null . inFloor 1 ) items = False
+    | (not . null . inFloor 2 ) items = False
+    | (not . null . inFloor 3 ) items = False
     | otherwise = True
 
-steps :: [State] -> Int
-steps prevStates 
-    | isFinalState currentState = 0
-    | otherwise = 
-        1 + ((customMin . map steps . nextStatePossibilities) prevStates)
+bsf :: [State] -> State
+bsf queue
+    | isFinal current = current
+    | otherwise = bsf queue'
+    
     where
-        currentState = last prevStates
-        customMin :: [Int] -> Int
-        customMin [] = maxBound
-        customMin xs = minimum xs
+        current = head queue
+        queue' = tail queue ++ (nextStates current)
 
-printState :: State -> IO ()
-printState state =
-    do
-        printFloor state 4
-        printFloor state 3
-        printFloor state 2
-        printFloor state 1
+bsf' :: [State] -> [State] -> State
+bsf' prev (x:xs)
+    | isFinal x = x
+    | otherwise = (bsf' prev' queue')
+
     where
-        printFloor :: State -> Int -> IO ()
-        printFloor state i =
-            do
-                putStr $ elevatorStr i state
-                print $ getFloor state i
-
-        elevatorStr :: Int -> State -> String
-        elevatorStr i state = if (i == elevator state)
-                              then "(E) "
-                              else "    "
-
-printList :: Show a => (a -> IO ()) -> [a] -> IO ()
-printList f [] = return ()
-printList f (x:xs) =
-    do
-        f x
-        putStrLn ""
-        printList f xs
+        next' = nextStates x
+        next'' = filter (\x -> x `notElem` prev) next'
+        prev' = prev ++ next''
+        queue' = xs ++ next''
 
 main = do
-    let state = State { elevator = 1
-                      , floor4 = []
-                      , floor3 = [Generator 'L']
-                      , floor2 = [Generator 'H']
-                      , floor1 = [Microchip 'H', Microchip 'L']
-                      }
-        state' = State { elevator = 3
-                      , floor4 = [Generator 'H', Microchip 'H']
-                      , floor3 = [Generator 'L', Microchip 'L']
-                      , floor2 = []
-                      , floor1 = []
-                      }
-        final = State { elevator = 4
-                      , floor4 = [Generator 'L', Generator 'H', Microchip 'H', Microchip 'L']
-                      , floor3 = []
-                      , floor2 = []
-                      , floor1 = []
-                      }
+    let initial = State 0 1 [ Item 1 (Chip 'H')
+                  , Item 1 (Chip 'L')
+                  , Item 2 (Generator 'H')
+                  , Item 3 (Generator 'L')
+                  ]
+        initial' = State 0 1 [ Item 1 (Generator 'T')
+                             , Item 1 (Chip 'T')
+                             , Item 1 (Generator 'P')
+                             , Item 1 (Generator 'S')
+                             , Item 2 (Chip 'P')
+                             , Item 2 (Chip 'S')
+                             , Item 3 (Generator 'p')
+                             , Item 3 (Chip 'p')
+                             , Item 3 (Generator 'R')
+                             , Item 3 (Chip 'R')
+                             ]
+        visited = bsf' [initial'] [initial']
+        distr i = length . takeWhile (\x -> moves x < i + 1) . dropWhile (\x -> moves x < i)
 
-        problem = State { elevator = 1
-                        , floor4 = []
-                        , floor3 = [Microchip 'p', Generator 'p', Generator 'R', Microchip 'R']
-                        , floor2 = [Microchip 'P', Microchip 'S']
-                        , floor1 = [Generator 'T', Microchip 'T', Generator 'P', Generator 'S']
-                        }
-        -- Promethium => 'p'
-
-
-    printList printState $ [state, state']
-    -- printState state
-    -- putStrLn ""
-    -- printState $ move state 1 2 [(Microchip 'H'), Microchip 'L']
-
+    print $ bsf' [initial'] [initial']
 
