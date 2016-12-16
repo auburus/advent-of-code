@@ -24,6 +24,21 @@ expand dat = dat ++ doExpand dat
             in 
                 extra ++ doExpand (dat' ++ extra)
 
+merge :: [a] -> [a] -> [a]
+merge (x:xs) (y:ys) = x : y : merge xs ys
+
+seq1 :: Data -> [Data]
+seq1 dat = merge (repeat dat) (repeat ((flip' . reverse) dat))
+
+seq2 :: Data
+seq2 = expand [0]
+
+merge' :: Data -> [Data] -> Data
+merge' xs (y:ys) = y ++ doMerge xs ys
+    where
+        doMerge :: Data -> [Data] -> Data
+        doMerge (x:xs) (y:ys) = (x : y) ++ (doMerge xs ys)
+
 checksum :: Data -> Data
 checksum dat
     | (odd . length) dat = dat
@@ -39,4 +54,8 @@ main = do
         len = 272
         len' = 35651584
 
-    print $ (checksum . take len' . expand) input
+    -- Option 1. Do it hard!
+    -- print $ (checksum . take len' . expand) input
+
+    -- Option 2. Do it smart!
+    print $ (checksum . take len' . merge' seq2) (seq1 input)
