@@ -2,10 +2,10 @@ module Main where
 
 import Data.List
 
-data Item' = Generator Char | Chip Char deriving (Show, Eq, Ord)
+data Item' = Generator Char | Chip Char deriving (Show, Eq)
 data Item = Item { pos :: Int
                  , item :: Item'
-                 } deriving (Show, Eq, Ord)
+                 } deriving (Show, Eq)
 
 data State = State { moves :: Int
                    , elevator :: Int
@@ -33,8 +33,6 @@ instance Eq State where
     (==) (State m1 e1 items1) (State m2 e2 items2) =
         e1 == e2 && sameList items1 items2
 
-instance Ord State where
-    (<=) 
 inFloor :: Int -> [Item] -> [Item]
 inFloor i = filter (\x -> pos x == i)
 
@@ -139,7 +137,7 @@ bsf queue
 bsf' :: [State] -> [State] -> State
 bsf' prev (x:xs)
     | isFinal x = x
-    | otherwise = bsf' prev' queue'
+    | otherwise = (bsf' prev' queue')
 
     where
         next' = nextStates x
@@ -152,8 +150,6 @@ main = do
                   , Item 1 (Chip 'L')
                   , Item 2 (Generator 'H')
                   , Item 3 (Generator 'L')
-                  , Item 1 (Chip 'T')
-                  , Item 2 (Generator 'T')
                   ]
         initial' = State 0 1 [ Item 1 (Generator 'T')
                              , Item 1 (Chip 'T')
@@ -165,9 +161,13 @@ main = do
                              , Item 3 (Chip 'p')
                              , Item 3 (Generator 'R')
                              , Item 3 (Chip 'R')
+                             , Item 1 (Chip 'E')
+                             , Item 1 (Generator 'E')
+                             , Item 1 (Chip 'D')
+                             , Item 1 (Generator 'D')
                              ]
         visited = bsf' [initial'] [initial']
         distr i = length . takeWhile (\x -> moves x < i + 1) . dropWhile (\x -> moves x < i)
 
-    print $ bsf' [initial] [initial]
+    print $ bsf' [initial'] [initial']
 
