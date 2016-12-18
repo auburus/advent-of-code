@@ -1,19 +1,17 @@
 module Main where
 
+import Data.List (tails)
+
 data Tile = Safe | Trap deriving (Eq, Show)
 
 nextRow :: [Tile] -> [Tile]
-nextRow tiles = doNextRow (Safe : tiles ++ [Safe])
-    where 
-        doNextRow :: [Tile] -> [Tile]
-        doNextRow (_:_:[]) = []
-        doNextRow (x:s@(y:z:xs))
-            | x == y && y /= z = Trap : doNextRow s
-            | x /= y && y == z = Trap : doNextRow s
-            | otherwise = Safe : doNextRow s
+nextRow tiles = [compute a b | a:_:b:_ <- tails (Safe : tiles ++ [Safe])]
+
+compute :: Tile -> Tile -> Tile
+compute a b = if a == b then Safe else Trap
 
 seqTiles :: [Tile] -> [[Tile]]
-seqTiles tiles = tiles : seqTiles (nextRow tiles)
+seqTiles = iterate nextRow
 
 countSafe :: [Tile] -> Int
 countSafe = foldl (\b a -> if a == Safe then b+1 else b) 0
