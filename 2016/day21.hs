@@ -129,6 +129,15 @@ problem1 word input = exec word . map mapInstr $ input
 problem2 :: Seq Char -> [String] -> Seq Char
 problem2 word input = exec word . List.reverse . map (contrary. mapInstr) $ input
 
+-- As suggested by reddit, bruteforce it
+problem2' :: Seq Char -> [String] -> [(Seq Char, Seq Char)]
+problem2' word input =
+    let allWords :: [Seq Char]
+        allWords = map S.fromList . List.permutations $ "abcdefgh"
+        pairs = zip allWords $ map (\x -> problem1 x input) allWords
+    in
+        filter (\(_,a) -> a == word) pairs
+
 main = do
     contents <- readFile "input21.txt"
     let word = S.fromList "abcdefgh"
@@ -137,6 +146,6 @@ main = do
     -- Problem 1
     print . problem1 (S.fromList "abcdefgh") $ input
 
-
     -- Problem 2
     print . problem2 (S.fromList "fbgdceah") $ input
+    print . problem2' (S.fromList "fbgdceah") $ input
