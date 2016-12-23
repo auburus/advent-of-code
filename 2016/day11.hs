@@ -2,172 +2,117 @@ module Main where
 
 import Data.List
 
-data Item' = Generator Char | Chip Char deriving (Show, Eq, Ord)
-data Item = Item { pos :: Int
-                 , item :: Item'
-                 } deriving (Show, Eq, Ord)
+data Elem = Hidrogen
+          | Lithium
+          deriving (Show, Eq, Ord)
 
-data State = State { moves :: Int
-                   , elevator :: Int
-                   , items :: [Item]
-                   }
+data Item = Gen Elem
+          | Chip Elem
+          deriving (Show, Eq, Ord)
 
-instance Show State where
-    show (State m elev items) =
-        "Moves: " ++ show m ++ "\n" ++
-        "Elevator: " ++ show elev ++ "\n" ++
-        show (inFloor 4 items) ++ "\n" ++
-        show (inFloor 3 items) ++ "\n" ++
-        show (inFloor 2 items) ++ "\n" ++
-        show (inFloor 1 items) ++ "\n"
+type Floor = Int
+type Elev = Int
 
-sameList :: Eq a => [a] -> [a] -> Bool
-sameList [] [] = True
-sameList [] _ = False
-sameList _ [] = False
-sameList (x:xs) ys 
-    | x `notElem` ys = False
-    | otherwise = sameList xs (delete x ys)
+type Items = [(Floor, Item)]
+type Area = (Elev, Items)
 
-instance Eq State where
-    (==) (State m1 e1 items1) (State m2 e2 items2) =
-        e1 == e2 && sameList items1 items2
+validElevator :: Int -> Bool
+validElevator i = i >= 1 && i<= 4
 
-instance Ord State where
-    (<=) 
-inFloor :: Int -> [Item] -> [Item]
-inFloor i = filter (\x -> pos x == i)
+getFloor :: Int -> Items -> Items
+getFloor i = filter ((==i) . fst)
 
-isChip :: Item' -> Bool
+getCurrentFloor :: Area -> Items
+getCurrentFloor area = getFloor (fst area) (snd area)
+
+partFloor :: Int -> Items -> (Items, Items)
+partFloor i = partition ((==i) . fst)
+
+partCurrentFloor :: Area -> (Items, Items)
+partCurrentFloor area = partFloor (fst area) (snd area)
+
+inElevator :: Items -> Bool
+inElevator items
+    | length items == 0 || length items > 2 = False
+    | otherwise = validFloor items
+
+floorCombs :: Items -> [(Items, Items)]
+floorCombs items = filter (inElevator . fst) .
+                   map (makePairs items) .
+                   subsequences $ items
+    where
+        makePairs :: Items -> Items -> (Items, Items)
+        makePairs all sel = (sel, remove all sel)
+            where
+                remove all [] = all
+                remove all (x:xs) = remove (delete x all) xs
+
+moveUp :: Items -> Items
+moveUp = map (\(floor, item) -> (floor + 1, item))
+
+moveDown :: Items -> Items
+moveDown = map (\(floor, item) -> (floor - 1, item))
+
+-- Validation related stuff
+isChip :: Item -> Bool
 isChip (Chip _) = True
 isChip _ = False
 
-isGenerator :: Item' -> Bool
-isGenerator = not . isChip
+allChipsProtected :: [Item] -> [Item] -> Bool
+allChipsProtected _ [] = True
+allChipsProtected [] _ = True
+allChipsProtected (Chip c:chips) gen 
+    | Gen c `elem` gen = allChipsProtected chips gen
+    | otherwise = False
 
-allChips :: [Item'] -> Bool
-allChips [] = True
-allChips xs = (foldl (&&) True . map isChip) xs
-
-allGenerators :: [Item'] -> Bool
-allGenerators [] = True
-allGenerators xs = (foldl (&&) True . map isGenerator) xs
-
-splitItems :: [Item'] -> ([Item'], [Item'])
-splitItems = partition isChip
-
-chipProtected :: [Item'] -> Item' -> Bool
-chipProtected generators (Chip c) = c `elem` generators'
+validFloor :: Items -> Bool
+validFloor items = allChipsProtected chips generators
     where
-        generators' = map (\(Generator g) -> g) generators
+        items' = map snd items
+        (chips, generators) = partition isChip items'
 
-validFloor :: [Item] -> Bool
-validFloor items
-    | allChips items' = True
-    | allGenerators items' = True
-    | otherwise =
-        (foldl (&&) True . map (chipProtected generators) ) chips
+validItems :: Items -> Bool
+validItems items = foldl (&&) True .
+                   map validFloor .
+                   map (\f -> f items) $
+                   map (\i -> getFloor i) [1..4]
+
+validArea :: Area -> Bool
+validArea = validItems . snd
+
+-- A partir d'aqui, es nomes anar calculant les seguents arees i filtrar a saco.
+-- Probblement, mirar com van les arees en un set i aquestes cosa...
+nextAreas :: Area -> [Area]
+nextAreas area
+    | fst area == 1 = areasUp
+    | fst area == 4 = areasDown
+    | otherwise = areasUp ++ areasDown
     where
-        items' = map item items
-        (chips, generators) = splitItems items'
+        (current, rest) = partCurrentFloor area
+        (partToMove, partToStay) = unzip . floorCombs $ current
+        combsUp = zipWith (++) (map moveUp partToMove) partToStay
+        combsDown = zipWith (++) (map moveDown partToMove) partToStay
+        combsUp' = map (\x -> sort (x ++ rest)) combsUp
+        combsDown' = map (\x -> sort (x ++ rest)) combsDown
 
--- This function checks that an Item collection is a valid one
-isValid :: [Item] -> Bool
-isValid items = allItemsValid items &&
-    (foldl (&&) True
-    . map validFloor
-    . map (\i -> inFloor i items)) [1..4]
-    where
-        allItemsValid :: [Item] -> Bool
-        allItemsValid = foldl (&&) True
-                      . map (\(Item i _) -> i `elem` [1..4] )
+        areasUp = filter validArea $ map (\x -> ((fst area + 1), x)) combsUp'
+        areasDown = filter validArea $ map (\x -> ((fst area - 1), x)) combsDown'
 
--- Until here, validation
--- From now on, the next states
-fitInElevator :: [Item] -> Bool
-fitInElevator xs
-    | length xs > 2 = False
-    | null xs = False
-    | otherwise = isValid xs
+-- TODO
+-- bfs
 
-nextStates :: State -> [State]
-nextStates state@(State i elev items) =
-    map (\(e,x) -> state { moves = i + 1
-                         , elevator = e
-                         , items = x }) (next elev items)
+printList :: Show a => [a] -> IO ()
+printList [] = return ()
+printList (x:xs) = do
+    print x
+    printList xs
 
-next :: Int -> [Item] -> [(Int, [Item])]
-next current items = total'
-    where
-        current' = inFloor current items
-        validCombs :: [[Item]]
-        validCombs = filter fitInElevator (subsequences current')
-        withoutComb = map (deleteList items) validCombs
-        toUpperFloor = map (map (\x -> x { pos = pos x + 1 } ) ) validCombs
-        toLowerFloor = map (map (\x -> x { pos = pos x - 1 } ) ) validCombs
-        upperTotal = (zipWith (++) withoutComb toUpperFloor)
-        lowerTotal = (zipWith (++) withoutComb toLowerFloor)
-        upper = map (\x -> (current + 1, x)) upperTotal
-        lower = map (\x -> (current - 1, x)) lowerTotal
-        total = upper ++ lower
-        total' = filter (isValid . snd) total
-        
-deleteList :: Eq a => [a] -> [a] -> [a]
-deleteList list [] = list
-deleteList list (x:xs) = deleteList (delete x list) xs
-
--- Now, the bsf and the final state check
-
-isFinal :: State -> Bool
-isFinal (State m elev items)
-    | elev /= 4 = False
-    | (null . inFloor 4 ) items = False
-    | (not . null . inFloor 1 ) items = False
-    | (not . null . inFloor 2 ) items = False
-    | (not . null . inFloor 3 ) items = False
-    | otherwise = True
-
-bsf :: [State] -> State
-bsf queue
-    | isFinal current = current
-    | otherwise = bsf queue'
-    
-    where
-        current = head queue
-        queue' = tail queue ++ (nextStates current)
-
-bsf' :: [State] -> [State] -> State
-bsf' prev (x:xs)
-    | isFinal x = x
-    | otherwise = bsf' prev' queue'
-
-    where
-        next' = nextStates x
-        next'' = filter (\x -> x `notElem` prev) next'
-        prev' = prev ++ next''
-        queue' = xs ++ next''
+initial :: Area
+initial = ( 1, [ (1, Chip Lithium)
+               , (1, Chip Hidrogen)
+               , (2, Gen Hidrogen)
+               , (3, Gen Lithium)
+               ])
 
 main = do
-    let initial = State 0 1 [ Item 1 (Chip 'H')
-                  , Item 1 (Chip 'L')
-                  , Item 2 (Generator 'H')
-                  , Item 3 (Generator 'L')
-                  , Item 1 (Chip 'T')
-                  , Item 2 (Generator 'T')
-                  ]
-        initial' = State 0 1 [ Item 1 (Generator 'T')
-                             , Item 1 (Chip 'T')
-                             , Item 1 (Generator 'P')
-                             , Item 1 (Generator 'S')
-                             , Item 2 (Chip 'P')
-                             , Item 2 (Chip 'S')
-                             , Item 3 (Generator 'p')
-                             , Item 3 (Chip 'p')
-                             , Item 3 (Generator 'R')
-                             , Item 3 (Chip 'R')
-                             ]
-        visited = bsf' [initial'] [initial']
-        distr i = length . takeWhile (\x -> moves x < i + 1) . dropWhile (\x -> moves x < i)
-
-    print $ bsf' [initial] [initial]
-
+    printList . nextAreas $ initial
