@@ -1,13 +1,21 @@
 module Main where
 
 import Data.List
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 data Elem = Hidrogen
           | Lithium
+          | Thulium
+          | Plutonium
+          | Strontium
+          | Promethium
+          | Ruthenium
           deriving (Show, Eq, Ord)
 
 data Item = Gen Elem
           | Chip Elem
+          | Pair
           deriving (Show, Eq, Ord)
 
 type Floor = Int
@@ -15,6 +23,8 @@ type Elev = Int
 
 type Items = [(Floor, Item)]
 type Area = (Elev, Items)
+
+type Moves = Int
 
 validElevator :: Int -> Bool
 validElevator i = i >= 1 && i<= 4
@@ -98,8 +108,22 @@ nextAreas area
         areasUp = filter validArea $ map (\x -> ((fst area + 1), x)) combsUp'
         areasDown = filter validArea $ map (\x -> ((fst area - 1), x)) combsDown'
 
+isFinalArea :: Area -> Bool
+isFinalArea (elev, items)
+    | elev /= 4 = False
+    | foldl (&&) True . map (\i -> null . getFloor i $ items) $ [1,2,3] = True
+    | otherwise = False
+
 -- TODO
--- bfs
+bfs :: Set Area -> [(Moves, Area)] -> Moves
+bfs visited ((moves, area):queue)
+    | isFinalArea area = moves
+    | otherwise = bfs visited' queue'
+    where
+        next = nextAreas area
+        next' = filter (\area -> not . Set.member area $ visited) next
+        visited' = foldl (\set area -> Set.insert area set) visited next'
+        queue' = queue ++ map (\x -> (moves + 1, x)) next'
 
 printList :: Show a => [a] -> IO ()
 printList [] = return ()
@@ -114,5 +138,20 @@ initial = ( 1, [ (1, Chip Lithium)
                , (3, Gen Lithium)
                ])
 
+problem1 :: Int
+problem1 = bfs (Set.insert initial Set.empty) [(0, initial)]
+    where
+        initial = ( 1, [ (1, Gen Thulium)
+                       , (1, Chip Thulium)
+                       , (1, Gen Plutonium)
+                       , (1, Chip Plutonium)
+                       , (1, Gen Strontium)
+                       , (2, Chip Plutonium)
+                       , (2, Chip Strontium)
+                       -- , (3, Gen Promethium)
+                       -- , (3, Chip Promethium)
+                       -- , (3, Gen Ruthenium)
+                       -- , (3, Chip Ruthenium)
+                       ])
 main = do
-    printList . nextAreas $ initial
+    print problem1
