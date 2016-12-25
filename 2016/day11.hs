@@ -3,6 +3,8 @@ module Main where
 import Data.List
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Queue (Queue)
+import qualified Queue as Q
 
 data Elem = Hidrogen
           | Lithium
@@ -90,8 +92,7 @@ validItems items = foldl (&&) True .
 validArea :: Area -> Bool
 validArea = validItems . snd
 
--- A partir d'aqui, es nomes anar calculant les seguents arees i filtrar a saco.
--- Probblement, mirar com van les arees en un set i aquestes cosa...
+-- Toca optimitzar aquesta funcio...
 nextAreas :: Area -> [Area]
 nextAreas area
     | fst area == 1 = areasUp
@@ -115,15 +116,16 @@ isFinalArea (elev, items)
     | otherwise = False
 
 -- TODO
-bfs :: Set Area -> [(Moves, Area)] -> Moves
-bfs visited ((moves, area):queue)
+bfs :: Set Area -> Queue (Moves, Area) -> Moves
+bfs visited queue
     | isFinalArea area = moves
-    | otherwise = bfs visited' queue'
+    | otherwise = bfs visited' queue''
     where
+        ((moves, area), queue') = Q.pop queue
         next = nextAreas area
         next' = filter (\area -> not . Set.member area $ visited) next
         visited' = foldl (\set area -> Set.insert area set) visited next'
-        queue' = queue ++ map (\x -> (moves + 1, x)) next'
+        queue'' = foldl Q.push queue' . map (\x -> (moves + 1, x)) $ next'
 
 printList :: Show a => [a] -> IO ()
 printList [] = return ()
@@ -139,7 +141,7 @@ initial = ( 1, [ (1, Chip Lithium)
                ])
 
 problem1 :: Int
-problem1 = bfs (Set.insert initial Set.empty) [(0, initial)]
+problem1 = bfs (Set.insert initial Set.empty) (Q.queue [(0, initial)])
     where
         initial = ( 1, [ (1, Gen Thulium)
                        , (1, Chip Thulium)
@@ -148,8 +150,8 @@ problem1 = bfs (Set.insert initial Set.empty) [(0, initial)]
                        , (1, Gen Strontium)
                        , (2, Chip Plutonium)
                        , (2, Chip Strontium)
-                       -- , (3, Gen Promethium)
-                       -- , (3, Chip Promethium)
+                       , (3, Gen Promethium)
+                       , (3, Chip Promethium)
                        -- , (3, Gen Ruthenium)
                        -- , (3, Chip Ruthenium)
                        ])
