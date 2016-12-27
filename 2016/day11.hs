@@ -5,6 +5,8 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Queue (Queue)
 import qualified Queue as Q
+import Data.Array (Array)
+import qualified Data.Array as A
 
 data Elem = Hidrogen
           | Lithium
@@ -13,6 +15,8 @@ data Elem = Hidrogen
           | Strontium
           | Promethium
           | Ruthenium
+          | Elerium
+          | Dilithium
           deriving (Show, Eq, Ord)
 
 data Item = Gen Elem
@@ -23,47 +27,35 @@ data Item = Gen Elem
 type Floor = Int
 type Elev = Int
 
-type Items = [(Floor, Item)]
-type Area = (Elev, Items)
+type House = Array Int [Item]
+type Area = (Elev, House)
 
 type Moves = Int
 
 validElevator :: Int -> Bool
 validElevator i = i >= 1 && i<= 4
 
-getFloor :: Int -> Items -> Items
-getFloor i = filter ((==i) . fst)
+getFloor :: Int -> House -> [Item]
+getFloor i house = house A.! i
 
-getCurrentFloor :: Area -> Items
+getCurrentFloor :: Area -> [Item]
 getCurrentFloor area = getFloor (fst area) (snd area)
 
-partFloor :: Int -> Items -> (Items, Items)
-partFloor i = partition ((==i) . fst)
-
-partCurrentFloor :: Area -> (Items, Items)
-partCurrentFloor area = partFloor (fst area) (snd area)
-
-inElevator :: Items -> Bool
+inElevator :: [Item] -> Bool
 inElevator items
     | length items == 0 || length items > 2 = False
     | otherwise = validFloor items
 
-floorCombs :: Items -> [(Items, Items)]
-floorCombs items = filter (inElevator . fst) .
+floorCombs :: [Item] -> [([Item], [Item])]
+floorCombs items = filter (\(a, b) -> inElevator a && validFloor b) .
                    map (makePairs items) .
                    subsequences $ items
     where
-        makePairs :: Items -> Items -> (Items, Items)
+        makePairs :: [Item] -> [Item] -> ([Item], [Item])
         makePairs all sel = (sel, remove all sel)
             where
                 remove all [] = all
                 remove all (x:xs) = remove (delete x all) xs
-
-moveUp :: Items -> Items
-moveUp = map (\(floor, item) -> (floor + 1, item))
-
-moveDown :: Items -> Items
-moveDown = map (\(floor, item) -> (floor - 1, item))
 
 -- Validation related stuff
 isChip :: Item -> Bool
@@ -77,55 +69,72 @@ allChipsProtected (Chip c:chips) gen
     | Gen c `elem` gen = allChipsProtected chips gen
     | otherwise = False
 
-validFloor :: Items -> Bool
+validFloor :: [Item] -> Bool
 validFloor items = allChipsProtected chips generators
     where
-        items' = map snd items
-        (chips, generators) = partition isChip items'
+        (chips, generators) = partition isChip items
 
-validItems :: Items -> Bool
+validItems :: House -> Bool
 validItems items = foldl (&&) True .
-                   map validFloor .
-                   map (\f -> f items) $
+                   map (\f -> (validFloor . f) items) $
                    map (\i -> getFloor i) [1..4]
 
 validArea :: Area -> Bool
 validArea = validItems . snd
 
--- Toca optimitzar aquesta funcio...
 nextAreas :: Area -> [Area]
-nextAreas area
-    | fst area == 1 = areasUp
-    | fst area == 4 = areasDown
+nextAreas area@(elev, house)
+    | elev == 1 = areasUp
+    | elev == 4 = areasDown
     | otherwise = areasUp ++ areasDown
     where
-        (current, rest) = partCurrentFloor area
-        (partToMove, partToStay) = unzip . floorCombs $ current
-        combsUp = zipWith (++) (map moveUp partToMove) partToStay
-        combsDown = zipWith (++) (map moveDown partToMove) partToStay
-        combsUp' = map (\x -> sort (x ++ rest)) combsUp
-        combsDown' = map (\x -> sort (x ++ rest)) combsDown
+        current = getCurrentFloor area
+        combs :: [([Item], [Item])]
+        combs = floorCombs current
+        combsUp = map (\(toMove, rem) -> house A.// [(elev, rem), (elev + 1, sort $ addMultiple (getFloor (elev + 1) house) toMove)]) combs
+        combsDown = map (\(toMove, rem) -> house A.// [(elev, rem), (elev - 1, sort $ addMultiple (getFloor (elev - 1) house) toMove)]) combs
 
-        areasUp = filter validArea $ map (\x -> ((fst area + 1), x)) combsUp'
-        areasDown = filter validArea $ map (\x -> ((fst area - 1), x)) combsDown'
+        areasUp = filter validArea $ map (\x -> (elev + 1, x)) combsUp
+        areasDown = filter validArea $ map (\x -> (elev - 1, x)) combsDown
 
+        addMultiple all [] = all
+        addMultiple all (x:xs) = addMultiple (x : all) xs
+        
+        
 isFinalArea :: Area -> Bool
-isFinalArea (elev, items)
+isFinalArea (elev, house)
     | elev /= 4 = False
-    | foldl (&&) True . map (\i -> null . getFloor i $ items) $ [1,2,3] = True
+    | foldl (&&) True . map (\i -> null . getFloor i $ house) $ [1,2,3] = True
     | otherwise = False
 
--- TODO
-bfs :: Set Area -> Queue (Moves, Area) -> Moves
+-- Functions to convert pairs of elements to an element called Pair
+shrinkArea :: Area -> Area
+shrinkArea (elev, house) = -- (elev, house) {-
+    (elev, (A.//) house $ map (\i -> (i, combine . splitFloor . getFloor i $ house)) [1..4])
+    where
+        combine :: ([Item] ,[Item]) -> [Item]
+        combine (chips, []) = chips
+        combine ([], gens) = gens
+        combine (((Chip c):chips), gens) =
+            case find (\(Gen g) -> g == c) gens of
+                Nothing -> (Chip c) : combine (chips, gens)
+                Just gen -> Pair : combine (chips, (delete gen gens))
+
+        splitFloor = partition isChip
+        -- -}
+
+bfs :: Set Area -> Queue (Moves, Area) -> [(Moves, Area)]
 bfs visited queue
-    | isFinalArea area = moves
-    | otherwise = bfs visited' queue''
+    | isFinalArea area = (moves, area) : []
+    | otherwise = -- (moves, area) :
+        bfs visited' queue''
     where
         ((moves, area), queue') = Q.pop queue
         next = nextAreas area
-        next' = filter (\area -> not . Set.member area $ visited) next
-        visited' = foldl (\set area -> Set.insert area set) visited next'
-        queue'' = foldl Q.push queue' . map (\x -> (moves + 1, x)) $ next'
+        shrinked = map shrinkArea next
+        next' = filter (\(_, shrink) -> Set.notMember shrink visited) . zip next $ shrinked
+        visited' = foldl (\set (_, shrink) -> Set.insert shrink set) visited next'
+        queue'' = foldl Q.push queue' . map (\x -> (moves + 1, x)) $ map fst next'
 
 printList :: Show a => [a] -> IO ()
 printList [] = return ()
@@ -134,26 +143,32 @@ printList (x:xs) = do
     printList xs
 
 initial :: Area
-initial = ( 1, [ (1, Chip Lithium)
-               , (1, Chip Hidrogen)
-               , (2, Gen Hidrogen)
-               , (3, Gen Lithium)
-               ])
+initial = ( 1, A.array (1,4) [ (1, sort [Chip Lithium, Chip Hidrogen])
+                             , (2, sort [Gen Hidrogen])
+                             , (3, sort [Gen Lithium])
+                             , (4, [])
+                             ])
 
-problem1 :: Int
-problem1 = bfs (Set.insert initial Set.empty) (Q.queue [(0, initial)])
+--problem1 :: Int
+problem1 = bfs (Set.insert (shrinkArea initial) Set.empty) (Q.queue [(0, initial)])
     where
-        initial = ( 1, [ (1, Gen Thulium)
-                       , (1, Chip Thulium)
-                       , (1, Gen Plutonium)
-                       , (1, Chip Plutonium)
-                       , (1, Gen Strontium)
-                       , (2, Chip Plutonium)
-                       , (2, Chip Strontium)
-                       , (3, Gen Promethium)
-                       , (3, Chip Promethium)
-                       -- , (3, Gen Ruthenium)
-                       -- , (3, Chip Ruthenium)
-                       ])
+        initial = ( 1, A.array (1,4) [ (1, sort [Gen Thulium, Chip Thulium, Gen Plutonium, Gen Strontium])
+                                     , (2, sort [Chip Plutonium, Chip Strontium])
+                                     , (3, sort [Gen Promethium, Chip Promethium, Gen Ruthenium, Chip Ruthenium])
+                                     , (4, [])
+                                     ])
+--problem2 :: Int
+problem2 = bfs (Set.insert initial Set.empty) (Q.queue [(0, initial)])
+    where
+        initial = ( 1, A.array (1,4) [ (1, sort [ Gen Thulium, Chip Thulium, Gen Plutonium, Gen Strontium
+                                           , Gen Elerium, Chip Elerium, Gen Dilithium, Chip Dilithium])
+                                     , (2, sort [Chip Plutonium, Chip Strontium])
+                                     , (3, sort [Gen Promethium, Chip Promethium, Gen Ruthenium, Chip Ruthenium])
+                                     , (4, [])
+                                     ])
+
 main = do
-    print problem1
+    printList $ bfs (Set.insert initial Set.empty) (Q.queue [(0, initial)])
+    -- printList $ problem1
+    print $ problem1
+    print $ problem2
