@@ -80,17 +80,16 @@ getValue reg str =
         Just i -> Just i
         Nothing -> Map.lookup str reg
 
-problem1 :: [String] -> Registers
-problem1 = execute registers . Q.fromList . map parseIns
-
-problem2 = execute (Map.insert "b" 956 registers) . Q.fromList . map parseIns
+problem :: [String] -> Registers
+problem = execute registers . Q.fromList . map parseIns
 
 main = do
     contents <- readFile "input7.txt"
+    contents2 <- readFile "input7_2.txt"
     let contents' = "123 -> x\n456 -> y\nx AND y -> d\nx OR y -> e\nx LSHIFT 2 -> f\ny RSHIFT 2 -> g\nNOT x -> h\nNOT y -> i"
         input = lines contents
-        input' = filter (\line -> (length . words) line > 3) input
+        input' = lines contents2
 
-    print . problem1 $ input
+    print . problem $ input
     putStrLn ""
-    print . problem2 $ input'
+    print . problem $ input'
