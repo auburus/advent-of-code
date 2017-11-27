@@ -23,6 +23,8 @@ main = do
     contents <- readFile "input3.txt"
     let countCorrect :: String -> Int
         countCorrect = correctTriangles . map lineToTriangle . lines
+        countCorrect' = length . filter validTriangle . map lineToTriangle . lines
 
     print $ countCorrect contents
+    print $ countCorrect' contents
     print $ length (lines contents)

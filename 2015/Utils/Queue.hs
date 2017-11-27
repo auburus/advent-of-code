@@ -6,6 +6,7 @@ module Utils.Queue
 , fromList
 , empty
 , null
+, singleton
 ) where
 
 import qualified Data.List as List
@@ -41,3 +42,6 @@ empty = fromList []
 -- Checks if the queue is empty (Hauria de mirar lo de foldable...)
 null :: Queue a -> Bool
 null (Queue q q') = List.null q && List.null q'
+
+singleton :: a -> Queue a
+singleton a = fromList [a]
