@@ -18,3 +18,6 @@ I asked reddit for suggestions of languages, and I'm still undecided between
 [Erlang](http://www.erlang.org) and [Rust](https://www.rust-lang.org). I also
 have considered [Go](https://golang.org) but I don't know why I don't see it
 as attractive as the others.
+
+Well... I'll end up using haskell again... as someone said, this things are meant
+to be fun, and nothing is better that haskell at this :D
