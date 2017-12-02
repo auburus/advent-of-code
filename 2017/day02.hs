@@ -30,13 +30,11 @@ doPart2 =
 
 findDivisiblePair :: [Int] -> (Int, Int)
 findDivisiblePair list = 
-    let pairs = zip (repeat list) list
-        divisible = map isDivisible pairs
-        valid = filter (\(xs, _) -> not (null xs)) divisible
-        valid' = map (\(xs, a) -> (head xs, a)) valid
-
-    in
-        head valid'
+    head .
+    map (\(xs, a) -> (head xs, a)) .
+    filter (\(xs, _) -> not (null xs)) .
+    map isDivisible  .
+    zip (repeat list) $ list
 
 isDivisible :: ([Int], Int) -> ([Int], Int)
 isDivisible (xs,a) = (filter (\x -> (x `mod` a == 0) && (x /= a)) xs, a)
