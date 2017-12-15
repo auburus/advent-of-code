@@ -12,9 +12,23 @@ main = do
     let input = lines $ contents 
 
     print . doPart1 $ input
+    print . doPart2 $ input
 
 doPart1 :: [String] -> (String, Int)
 doPart1 input = maxRegister . foldl execInstruction M.empty $ input
+
+doPart2 :: [String] -> (String, Int)
+doPart2 input = 
+    foldl (\(maxId, maxVal) (id, val) -> if val > maxVal
+                                      then (id, val)
+                                      else (maxId, maxVal) )
+    ("a",0) .
+    map maxRegister' .
+    regValues M.empty $ input
+
+regValues :: Registers -> [String] -> [Registers]
+regValues reg [] = [reg]
+regValues reg (ins:xs) = reg : (regValues (execInstruction reg ins) xs)
 
 execInstruction :: Registers -> String -> Registers
 execInstruction reg instruction
@@ -26,6 +40,11 @@ execInstruction reg instruction
         op = parseOp (ins' !! 1) (ins' !! 2)
         cond = parseCondition (ins' !! 5) (ins' !! 6)
         newVal = op $ M.findWithDefault 0 (ins' !! 0) reg
+
+maxRegister' :: Registers -> (String, Int)
+maxRegister' reg
+    | M.null reg = ("a", 0)
+    | otherwise = maxRegister reg
 
 maxRegister :: Registers -> (String, Int)
 maxRegister reg = M.foldlWithKey
