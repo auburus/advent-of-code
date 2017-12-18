@@ -4,12 +4,17 @@ module Main where
 import Data.List
 import Data.Sequence (Seq)
 import qualified Data.Sequence as S
+import Data.Foldable (toList)
+import Data.Char (ord)
+import Data.Bits (xor)
+import Numeric (showHex)
 
 main = do
     let input = [76,1,88,148,166,217,130,0,128,254,16,2,130,71,255,229] 
+        input' = "76,1,88,148,166,217,130,0,128,254,16,2,130,71,255,229"
 
     print . doPart1 256 $ input
-    -- print . doPart2 $ input
+    print . doPart2 256 $ input'
 
 
 doPart1 :: Int -> [Int] -> Seq Int
@@ -35,3 +40,26 @@ doHash i l seq =
 
 frontToBack :: Int -> Seq Int -> Seq Int
 frontToBack i = uncurry (S.><) . (\(a,b) -> (b,a)) . S.splitAt i
+
+doPart2 :: Int -> String -> String
+doPart2 size asciiStr =
+    let lengths = asciiSeq asciiStr
+        repeatedLengths = foldl (++) [] . replicate 64 $ lengths
+        sparseHash = hash 0 0 repeatedLengths $ S.fromList [0..(size-1)]
+        denseHash = sparseToDense . toList $ sparseHash :: [Int]
+    in
+        foldl (++) "" 
+        . map (\x -> if length x == 1 then ('0':x) else x)
+        . map (\x -> showHex x "")
+        $ denseHash
+
+
+asciiSeq :: String -> [Int]
+asciiSeq [] = [17, 31, 73, 47, 23]
+asciiSeq (x:xs) = ord x : asciiSeq xs
+
+sparseToDense :: [Int] -> [Int]
+sparseToDense [] = []
+sparseToDense xs = foldl xor (head first16) (tail first16) : sparseToDense rest
+    where
+        (first16, rest) = splitAt 16 xs
