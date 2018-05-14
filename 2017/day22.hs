@@ -7,7 +7,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
-data Type = Clear | Infected deriving (Show, Eq)
+data Type = Clear | Infected | Weakened | Flagged deriving (Show, Eq)
 type Pos = (Integer, Integer)
 type Grid = Map Pos Type
 data Dir = N | S | E | W deriving (Show, Eq)
@@ -22,10 +22,16 @@ main = do
     let input = lines $ contents
 
     print . doPart1 $ input
+    print . doPart2 $ input
+
 
 doPart1 :: Input -> Infections
 doPart1 input =
     (\(_,_,_,a) -> a) $ doBursts 10000 ((parseInput input), (0,0), N)
+
+doPart2 :: Input -> Infections
+doPart2 input =
+    (\(_,_,_,a) -> a) $ doBursts2 10000000 ((parseInput input), (0,0), N)
 
 parseInput :: Input -> Grid
 parseInput input = foldl (\map (pos, _) -> M.insert pos Infected map) M.empty
@@ -42,6 +48,33 @@ parseInput input = foldl (\map (pos, _) -> M.insert pos Infected map) M.empty
 
 doBursts :: Int -> (Grid, Pos, Dir) -> (Grid, Pos, Dir, Infections)
 doBursts n (grid, pos, dir) = iterate burst (grid, pos, dir, 0) !! n
+
+doBursts2 :: Int -> (Grid, Pos, Dir) -> (Grid, Pos, Dir, Infections)
+doBursts2 n (grid, pos, dir) = iterate burst2 (grid, pos, dir, 0) !! n
+
+burst2 :: (Grid, Pos, Dir, Infections) -> (Grid, Pos, Dir, Infections)
+burst2 (grid, pos, dir, n) =
+    let cell = M.findWithDefault Clear pos grid
+    in case cell of
+        Clear -> ( M.insert pos Weakened grid
+                 , move pos (turnLeft dir)
+                 , turnLeft dir
+                 , n)
+
+        Infected -> ( M.insert pos Flagged grid
+                    , move pos (turnRight dir)
+                    , turnRight dir
+                    , n)
+
+        Flagged -> ( M.insert pos Clear grid
+                   , move pos (reverseDir dir)
+                   , reverseDir dir
+                   , n)
+
+        Weakened -> ( M.insert pos Infected grid
+                    , move pos dir
+                    , dir
+                    , n+1 )
 
 burst :: (Grid, Pos, Dir, Infections) -> (Grid, Pos, Dir, Infections)
 burst (grid, pos, dir, n) =
@@ -64,6 +97,9 @@ turnRight W = N
 
 turnLeft :: Dir -> Dir
 turnLeft = turnRight . turnRight . turnRight
+
+reverseDir :: Dir -> Dir
+reverseDir = turnRight . turnRight
 
 move :: Pos -> Dir -> Pos
 move (x,y) N = (x, y+1)
