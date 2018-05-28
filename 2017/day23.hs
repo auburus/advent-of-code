@@ -19,8 +19,13 @@ type Registers = Map Char Int
 main = do
     contents <- readFile "input23.txt"
     let input = map (parseLine . words) . lines $ contents
+        firstB = 81 * 100 + 100000
+        len = 1000
 
+    --mapM_ print . take 10 . doPart1 $ input
     print . doPart1 $ input
+
+    print $ doPart2 firstB len
 
 registers :: Registers
 registers = M.insert 'a' 0
@@ -75,3 +80,60 @@ runInstruction reg ins =
 getValue :: Registers -> Param -> Int
 getValue registers (Register r) = registers M.! r
 getValue registers (Value a) = a
+
+
+-- In fact, we want to know the amount of prime numbers between 108300 and 125300
+-- that correspond to the form (108300 + 17*i)
+doPart2 :: Int -> Int -> Int
+doPart2 init len = 
+    let bs = take (len+1) [ init + 17*i | i <- [0,1..] ]
+        p = primes (init + 17 * len)
+    in
+        length $ filter (\x -> x `notElem` p) bs
+        
+
+primes :: Int -> [Int]
+primes max 
+    | max <= 2 = [max]
+    | otherwise = sieve [2..max]
+    where
+        sieve [] = []
+        sieve (x:xs) = x : sieve (filter (\a -> (a `mod` x) /= 0) xs)
+        
+{-
+
+
+b = 83
+c = b
+if a != 0:
+    b = b * 100
+    b = b + 100000
+    c = b
+    c = c + 17000
+
+while(1): // es fa 1000 vegades
+    f = 1
+    d = 2
+
+    do 
+        e = 2
+        do
+            if d * e == b:
+                f = 0
+
+            e = e + 1
+        while (e != b)
+
+        d++
+    while (d != b)
+
+    if ( f == 0)
+        h = h + 1
+
+    if b == c:
+        exit()
+
+    b = b + 17
+end
+
+-}
