@@ -23,6 +23,11 @@ as attractive as the others.
 Well... I'll end up using haskell again... as someone said, this things are meant
 to be fun, and nothing is better that haskell at this :D
 
-####### Todo
-Redo problem 21, I bruteforced it and the computer was all night running, I want
+
+###### Todo
+Redo 2017 problem 21, I bruteforced it and the computer was all night running, I want
 it to be as fast/efficient as usual
+
+
+#### 2018 Edition
+Haskell again, yay!
