@@ -13,8 +13,6 @@ main = do
 
     print . sum $ input
     print . fmap fst . problem2 $ input
-    -- print . findDuplicate S.empty . partialSums 0 $ looped
-
 
 partialSums :: Int -> [Int] -> [Int]
 partialSums a [] = [a]
