@@ -2,34 +2,41 @@ module Main where
 
 import System.IO
 import Data.List
-import Data.Set (Set)
-import qualified Data.Set as S
+import Data.Maybe (catMaybes)
+import Control.Applicative
 
 main = do
     contents <- readFile "input01.txt"
-    let input = map (read . (\(a:xs) -> if a == '+' then xs else a:xs))
-              . lines
-              $ contents :: [Int]
+    input <- map (myRead) . lines
+          <$> readFile "input01.txt"
 
     print . sum $ input
-    print . fmap fst . problem2 $ input
+    print . problem2 $ input
+    where
+        myRead ('+':xs) = read xs
+        myRead xs = read xs
 
 partialSums :: Int -> [Int] -> [Int]
 partialSums a [] = [a]
 partialSums a (x:xs) = a : (partialSums (a+x) xs)
 
-problem2 :: [Int] -> Maybe (Int, Int)
+problem2 :: [Int] -> Int
 problem2 input =
-    let m = myMap 0
-          . tail . partialSums 0 $ input
-        min' = minimum' m
+    let m = catMaybes
+          . closestMultiple 0
+          . tail
+          . partialSums 0
+          $ input
+        min' = minimum . snd . unzip $ m
     in
-        head . filter ((==min') . maybe (-1) snd ) $ m
+        fst . head . filter ((==min') . snd ) $ m
 
-myMap :: Int -> [Int] -> [Maybe (Int, Int)]
-myMap i xs 
+closestMultiple :: Int -> [Int] -> [Maybe (Int, Int)]
+closestMultiple i xs 
     | i >= length xs = []
-    | otherwise = (findMultiples (xs !! i) (last xs) (delete (xs !! i) xs)) : myMap (i+1) xs
+    | otherwise = (findMultiples (xs !! i) offset (delete (xs !! i) xs)) : closestMultiple (i+1) xs
+    where
+        offset = last xs
 
 findMultiples :: Int -> Int -> [Int] -> Maybe (Int, Int)
 findMultiples a offset list =
@@ -40,12 +47,4 @@ findMultiples a offset list =
     in
         case matches of
             [] -> Nothing
-            _ -> Just $ foldl min' (head matches) (tail matches)
-
-min' :: (Int, Int) -> (Int, Int) -> (Int, Int)
-min' (a,b) (c,d)
-    | d < b = (c,d)
-    | otherwise = (a,b)
-
-minimum' :: [Maybe (Int, Int)] -> Int
-minimum' xs = foldl (\b x -> maybe b (min b . snd) x) (maybe 0 snd (head  xs)) (tail xs)
+            _ -> Just $ minimumBy (\a b -> compare (snd a) (snd b)) matches
