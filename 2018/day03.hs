@@ -3,9 +3,7 @@ module Main where
 import System.IO (readFile)
 import Data.Text (split, splitOn, pack, unpack)
 import Data.List
-import Data.Set (Set)
 import Data.Map (Map)
-import qualified Data.Set as S
 import qualified Data.Map as M
 import Control.Applicative
 
