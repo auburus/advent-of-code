@@ -32,18 +32,13 @@ deleteAll (x:xs) a
     | toLower x == a = deleteAll xs a
     | otherwise = x : deleteAll xs a
 
-        
-react :: String -> String
-react [] = []
-react (a:[]) = [a]
-react (a:b:xs)
-    | isUpper a && toLower a == b = react xs
-    | isLower a && toUpper a == b = react xs
-    | otherwise = a : react (b:xs)
 
+-- Changed the code to use a stack, works way better
 fullyReact :: String -> String
-fullyReact str = 
-    let reactions = iterate react str
-        pairs = zip reactions (tail reactions)
-    in
-        fst . head . dropWhile (\(a,b) -> a/=b) $ pairs
+fullyReact = foldl r [] 
+    where
+        r (a:xs) b
+            | isUpper a && toLower a == b = xs
+            | isLower a && toUpper a == b = xs
+            | otherwise = b:a:xs
+        r [] b = [b]
