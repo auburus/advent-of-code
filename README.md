@@ -2,7 +2,7 @@
 ![Edition 2015](https://img.shields.io/badge/AoC_2015-35_stars-yellow.svg)
 ![Edition 2016](https://img.shields.io/badge/AoC_2016-50_stars-yellow.svg)
 ![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
-![Edition 2018](https://img.shields.io/badge/AoC_2018-26-yellow.svg)
+![Edition 2018](https://img.shields.io/badge/AoC_2018-28-yellow.svg)
 
 This is my attempt to solve each year [advent of code](http://adventofcode.com),
 
