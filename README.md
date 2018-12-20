@@ -4,7 +4,7 @@
 ![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
 ![Edition 2018](https://img.shields.io/badge/AoC_2018-38_stars-yellow.svg)
 
-This is my attempt to solve each year [advent of code](http://adventofcode.com),
+This is my attempt to solve each year [advent of code](https://adventofcode.com),
 
 #### 2015 & 2016 Edition
 For now, I'm using haskell, but that might change in the future.
