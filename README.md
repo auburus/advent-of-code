@@ -3,6 +3,7 @@
 ![Edition 2016](https://img.shields.io/badge/AoC_2016-50_stars-yellow.svg)
 ![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
 ![Edition 2018](https://img.shields.io/badge/AoC_2018-38_stars-yellow.svg)
+![Edition 2019](https://img.shields.io/badge/AoC_2018-04_stars-yellow.svg)
 
 This is my attempt to solve each year [advent of code](https://adventofcode.com),
 
@@ -31,3 +32,8 @@ it to be as fast/efficient as usual
 
 #### 2018 Edition
 Haskell again, yay!
+
+#### 2019 Edition
+Well, with all the shame of not having finshed the 2018 edition before december,
+and starting to do the challenges on the 8th... this year I am not being
+as focused as others...
