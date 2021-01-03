@@ -4,7 +4,7 @@
 ![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
 ![Edition 2018](https://img.shields.io/badge/AoC_2018-38_stars-yellow.svg)
 ![Edition 2019](https://img.shields.io/badge/AoC_2019-08_stars-yellow.svg)
-![Edition 2020](https://img.shields.io/badge/AoC_2020-33_stars-yellow.svg)
+![Edition 2020](https://img.shields.io/badge/AoC_2020-35_stars-yellow.svg)
 
 This is my attempt to solve each year [advent of code](https://adventofcode.com),
 
