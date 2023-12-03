@@ -1,10 +1,13 @@
 # Advent of Code
-![Edition 2015](https://img.shields.io/badge/AoC_2015-35_stars-yellow.svg)
-![Edition 2016](https://img.shields.io/badge/AoC_2016-50_stars-yellow.svg)
-![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
-![Edition 2018](https://img.shields.io/badge/AoC_2018-38_stars-yellow.svg)
-![Edition 2019](https://img.shields.io/badge/AoC_2019-08_stars-yellow.svg)
+![Edition 2023](https://img.shields.io/badge/AoC_2020-0_stars-yellow.svg)
+![Edition 2022](https://img.shields.io/badge/AoC_2020-0_stars-yellow.svg)
+![Edition 2021](https://img.shields.io/badge/AoC_2020-0_stars-yellow.svg)
 ![Edition 2020](https://img.shields.io/badge/AoC_2020-35_stars-yellow.svg)
+![Edition 2019](https://img.shields.io/badge/AoC_2019-08_stars-yellow.svg)
+![Edition 2018](https://img.shields.io/badge/AoC_2018-40_stars-yellow.svg)
+![Edition 2017](https://img.shields.io/badge/AoC_2017-50_stars-yellow.svg)
+![Edition 2016](https://img.shields.io/badge/AoC_2016-50_stars-yellow.svg)
+![Edition 2015](https://img.shields.io/badge/AoC_2015-36_stars-yellow.svg)
 
 This is my attempt to solve each year [advent of code](https://adventofcode.com),
 
@@ -38,3 +41,16 @@ Haskell again, yay!
 Well, with all the shame of not having finshed the 2018 edition before december,
 and starting to do the challenges on the 8th... this year I am not being
 as focused as others...
+
+#### 2020 Edition
+Trying it with haskell
+
+#### 2021 & 2022 Editions
+Life got in the way, didn't get to attempt it during that period. If I finish the
+2022 Edition and I still want more stuff, I can always come back to those.
+
+#### 2022 Edition
+Starting on Dec 3th is not the path to success, but letr try it nonetheless.
+
+We will try Elixir this year! I've started learning it earlier this year, and
+I think it would be nice to keep practicing (its been a few months).
