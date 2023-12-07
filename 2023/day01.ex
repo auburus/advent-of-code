@@ -2,9 +2,8 @@ defmodule Day01 do
   defp getInput() do
     IO.read(:all)
     |> String.split("\n")
-    |> Enum.filter(fn l -> (l != "") end)
+    |> Enum.filter(fn l -> l != "" end)
   end
-
 
   defp isNumber?(c) do
     cond do
@@ -15,34 +14,34 @@ defmodule Day01 do
 
   defp replaceNumberWords(line) do
     line
-      |> String.replace("one", "o1ne")
-      |> String.replace("two", "t2wo")
-      |> String.replace("three", "t3hree")
-      |> String.replace("four", "f4our")
-      |> String.replace("five", "f5ive")
-      |> String.replace("six", "s6ix")
-      |> String.replace("seven", "s7even")
-      |> String.replace("eight", "e8ight")
-      |> String.replace("nine", "n9ine")
+    |> String.replace("one", "o1ne")
+    |> String.replace("two", "t2wo")
+    |> String.replace("three", "t3hree")
+    |> String.replace("four", "f4our")
+    |> String.replace("five", "f5ive")
+    |> String.replace("six", "s6ix")
+    |> String.replace("seven", "s7even")
+    |> String.replace("eight", "e8ight")
+    |> String.replace("nine", "n9ine")
   end
 
   defp parseLine2(line) do
-      line
-      |> replaceNumberWords()
-      |> String.graphemes()
-      |> Enum.filter(&isNumber?/1)
-      |> then(fn l -> List.first(l) <> List.last(l) end)
-      |> Integer.parse()
-      |> then(fn {a, _} -> a end)
+    line
+    |> replaceNumberWords()
+    |> String.graphemes()
+    |> Enum.filter(&isNumber?/1)
+    |> then(fn l -> List.first(l) <> List.last(l) end)
+    |> Integer.parse()
+    |> then(fn {a, _} -> a end)
   end
 
   defp parseLine(line) do
-      line
-      |> String.graphemes()
-      |> Enum.filter(&isNumber?/1)
-      |> then(fn l -> List.first(l) <> List.last(l) end)
-      |> Integer.parse()
-      |> then(fn {a, _} -> a end)
+    line
+    |> String.graphemes()
+    |> Enum.filter(&isNumber?/1)
+    |> then(fn l -> List.first(l) <> List.last(l) end)
+    |> Integer.parse()
+    |> then(fn {a, _} -> a end)
   end
 
   defp problem1(input) do
@@ -57,7 +56,6 @@ defmodule Day01 do
     |> Enum.sum()
   end
 
-
   def main() do
     input = getInput()
     IO.puts("Part 1: ")
@@ -67,12 +65,11 @@ defmodule Day01 do
     |> IO.puts()
 
     IO.puts("Part 2: ")
+
     input
     |> problem2()
     |> IO.puts()
-
   end
 end
-
 
 Day01.main()
