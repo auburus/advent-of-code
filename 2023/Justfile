@@ -1,0 +1,10 @@
+
+
+help:
+    just -l
+
+day DAY_NUM:
+    elixir day{{ DAY_NUM }}.ex < input{{ DAY_NUM }}.txt
+
+test DAY_NUM:
+    elixir day{{ DAY_NUM }}.ex < inputtest{{ DAY_NUM }}.txt
