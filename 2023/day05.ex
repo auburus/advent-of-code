@@ -172,7 +172,9 @@ defmodule Day05 do
       []
     )
     |> Enum.filter(fn {start, _end_} -> valueIsInSeedRanges?(start, seed_ranges) end)
-    |> Enum.map(fn {start, end_} -> {map_value(start, reduced_map), map_value(end_, reduced_map)} end)
+    |> Enum.map(fn {start, end_} ->
+      {map_value(start, reduced_map), map_value(end_, reduced_map)}
+    end)
     |> Enum.map(fn x -> x |> elem(0) end)
     |> Enum.min()
   end
