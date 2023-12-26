@@ -9,5 +9,5 @@ day DAY_NUM:
 test DAY_NUM:
     elixir day{{ DAY_NUM }}.ex < inputtest{{ DAY_NUM }}.txt
 
-format:
+fmt:
     mix format *.ex
