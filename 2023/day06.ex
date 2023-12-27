@@ -55,11 +55,19 @@ defmodule Day05 do
     {time, distance}
   end
 
+  # x * (T - x) >= D
+  # -x^2 + Tx -D >= 0
+  # x^2 - Tx + D <= 0
+
+  # -T +- sqrt(T^2 - 4*D) / 2
   defp problem1(input) do
     input
-    |> Enum.map(fn {t, d} -> 0..t |> Enum.map(fn x -> {x * (t-x), d} end) end)
-    |> Enum.map(fn x -> x |> Enum.filter(fn {value, d} -> value > d end) |> Enum.count() end)
+    |> Enum.map(fn {t, d} ->
+      {floor((t - :math.sqrt(t * t - 4 * d)) / 2), ceil((t + :math.sqrt(t * t - 4 * d)) / 2)}
+      |> then(fn {a,b} -> (b-1 - (a+1) + 1) end)
+    end)
     |> Enum.product()
+
   end
 
   defp problem2(input) do
@@ -70,9 +78,7 @@ defmodule Day05 do
   def main() do
     input =
       getInput()
-      # |> parseInput()
 
-    # IO.inspect(Enum.sort(input))
     IO.puts("Part 1: ")
 
     input
