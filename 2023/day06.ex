@@ -64,10 +64,9 @@ defmodule Day05 do
     input
     |> Enum.map(fn {t, d} ->
       {floor((t - :math.sqrt(t * t - 4 * d)) / 2), ceil((t + :math.sqrt(t * t - 4 * d)) / 2)}
-      |> then(fn {a,b} -> (b-1 - (a+1) + 1) end)
+      |> then(fn {a, b} -> b - 1 - (a + 1) + 1 end)
     end)
     |> Enum.product()
-
   end
 
   defp problem2(input) do
