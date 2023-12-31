@@ -11,3 +11,22 @@ test DAY_NUM:
 
 fmt:
     mix format *.ex
+
+finish:
+    #!/usr/bin/env python3
+    import re
+    
+    with open("{{justfile_directory()}}/../README.md") as f:
+      contents = f.read()
+
+    def incrStars(matchobj):
+        stars = int(matchobj.group(1))
+        return f"AoC_2023-{stars+1:2}_stars-yellow.svg"
+
+
+    updated = re.sub(r"AoC_2023-(\d+)_stars-yellow.svg", incrStars, contents)
+    with open("{{justfile_directory()}}/../README.md", "w") as f:
+        f.write(updated)
+
+    print("Added 1 star to 2023 in README.md")
+
