@@ -15,11 +15,12 @@ defmodule Day09 do
       sequence |> Enum.zip(sequence |> Enum.drop(1)) |> Enum.map(fn {a, b} -> b - a end)
 
     cond do
+      # Technically is last, but all numbers are equal
       Enum.all?(diff_sequence, &(&1 == 0)) ->
-        [hd(sequence) | sequence]
+        hd(sequence)
 
       true ->
-        sequence ++ [List.last(sequence) + (diff_sequence |> expandSequence() |> List.last())]
+        List.last(sequence) + (diff_sequence |> expandSequence())
     end
   end
 
@@ -28,22 +29,20 @@ defmodule Day09 do
       sequence |> Enum.zip(sequence |> Enum.drop(1)) |> Enum.map(fn {a, b} -> b - a end)
 
     cond do
-      Enum.all?(diff_sequence, &(&1 == 0)) -> [hd(sequence) | sequence]
-      true -> [hd(sequence) - (diff_sequence |> expandSequenceBackwards() |> hd()) | sequence]
+      Enum.all?(diff_sequence, &(&1 == 0)) -> hd(sequence)
+      true -> hd(sequence) - (diff_sequence |> expandSequenceBackwards())
     end
   end
 
   defp problem1(input) do
     input
     |> Enum.map(&expandSequence/1)
-    |> Enum.map(&List.last/1)
     |> Enum.sum()
   end
 
   defp problem2(input) do
     input
     |> Enum.map(&expandSequenceBackwards/1)
-    |> Enum.map(&hd/1)
     |> Enum.sum()
   end
 
