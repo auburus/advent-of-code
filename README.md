@@ -1,5 +1,5 @@
 # Advent of Code
-![Edition 2023](https://img.shields.io/badge/AoC_2023-14_stars-yellow.svg)
+![Edition 2023](https://img.shields.io/badge/AoC_2023-16_stars-yellow.svg)
 ![Edition 2022](https://img.shields.io/badge/AoC_2022-0_stars-yellow.svg)
 ![Edition 2021](https://img.shields.io/badge/AoC_2021-0_stars-yellow.svg)
 ![Edition 2020](https://img.shields.io/badge/AoC_2020-35_stars-yellow.svg)
